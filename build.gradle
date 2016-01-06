@@ -1,0 +1,44 @@
+plugins {
+	id "com.gradle.plugin-publish" version "0.9.2"
+}
+
+apply plugin: 'groovy'
+apply plugin: 'maven'
+
+defaultTasks 'build'
+
+version = "${buildVersion}-SNAPSHOT"
+targetCompatibility = '1.8'
+sourceCompatibility = '1.8'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile gradleApi()
+}
+
+jar.manifest.mainAttributes (
+    "Built-By": System.properties['user.name'],
+    "Created-By": System.properties['java.vm.version'] + " (" + System.properties['java.vm.vendor'] + ")",
+    "Implementation-Title": name,
+    "Implementation-Version": version
+)
+
+artifacts {
+    archives jar
+}
+
+pluginBundle {
+    website = 'http://www.gradle.org/'
+    vcsUrl = 'https://github.com/me.nallar/ModPatcherGradle'
+    description = 'Gradle plugin for ModPatcher Core Mods'
+    tags = ['minecraft']
+    plugins {
+        modpatcher {
+            id = 'me.me.nallar.me.nallar.modpatcher.ModPatcherGradlePlugin'
+            displayName = 'ModPatcher Gradle Plugin'
+        }
+    }
+}
