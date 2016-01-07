@@ -7,6 +7,8 @@ apply plugin: 'maven'
 
 defaultTasks 'build'
 
+archivesBaseName="ModPatcherGradle"
+group="me.nallar"
 version = "${buildVersion}-SNAPSHOT"
 targetCompatibility = '1.8'
 sourceCompatibility = '1.8'
