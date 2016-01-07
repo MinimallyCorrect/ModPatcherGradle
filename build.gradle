@@ -37,7 +37,7 @@ pluginBundle {
     tags = ['minecraft']
     plugins {
         modpatcher {
-            id = 'me.me.nallar.me.nallar.modpatcher.ModPatcherGradlePlugin'
+            id = 'me.nallar.ModPatcherPlugin'
             displayName = 'ModPatcher Gradle Plugin'
         }
     }
