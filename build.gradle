@@ -1,5 +1,6 @@
 plugins {
 	id "com.gradle.plugin-publish" version "0.9.2"
+	id 'nebula.provided-base' version '3.0.3'
 }
 
 apply plugin: 'groovy'
@@ -19,6 +20,7 @@ repositories {
 
 dependencies {
     compile gradleApi()
+	provided "org.projectlombok:lombok:1.16.6"
 }
 
 jar.manifest.mainAttributes (
