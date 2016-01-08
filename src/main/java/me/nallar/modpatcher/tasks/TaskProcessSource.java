@@ -9,7 +9,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.*;
 import java.util.jar.*;
 
-public class TaskExtractGeneratedSources extends DefaultTask {
+public class TaskProcessSource extends DefaultTask {
 	@TaskAction
 	public void run() throws Exception {
 		File f = getProject().getTasksByName("remapMcSources", false).iterator().next().getOutputs().getFiles().iterator().next();

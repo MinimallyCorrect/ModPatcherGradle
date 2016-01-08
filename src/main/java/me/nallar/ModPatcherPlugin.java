@@ -2,8 +2,8 @@ package me.nallar;
 
 import lombok.Data;
 import lombok.val;
-import me.nallar.modpatcher.tasks.TaskExtractGeneratedSources;
-import me.nallar.modpatcher.tasks.TaskGenerateInheritanceHierarchy;
+import me.nallar.modpatcher.tasks.TaskProcessSource;
+import me.nallar.modpatcher.tasks.TaskProcessBinary;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
@@ -19,8 +19,8 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		project.getExtensions().add("modpatcher", extension);
 
 		val tasks = project.getTasks();
-		tasks.create(BINARY_PROCESSING_TASK, TaskGenerateInheritanceHierarchy.class);
-		tasks.create(SRC_PROCESSING_TASK, TaskExtractGeneratedSources.class);
+		tasks.create(BINARY_PROCESSING_TASK, TaskProcessBinary.class);
+		tasks.create(SRC_PROCESSING_TASK, TaskProcessSource.class);
 
 		project.afterEvaluate(this::afterEvaluate);
 	}
@@ -30,6 +30,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 		// generateInheritanceHierarchy required for setupCiWorkspace. Runs after deobfMcMCP
 		tasks.getByName(BINARY_PROCESSING_TASK).mustRunAfter("deobfMcMCP");
+		tasks.getByName("compileJava").dependsOn(BINARY_PROCESSING_TASK);
 		tasks.getByName("setupCiWorkspace").dependsOn(BINARY_PROCESSING_TASK);
 
 		tasks.getByName(SRC_PROCESSING_TASK).mustRunAfter("remapMcSources");

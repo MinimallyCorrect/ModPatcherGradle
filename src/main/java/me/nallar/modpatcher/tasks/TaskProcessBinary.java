@@ -10,7 +10,7 @@ import java.io.*;
 import java.util.*;
 import java.util.jar.*;
 
-public class TaskGenerateInheritanceHierarchy extends DefaultTask {
+public class TaskProcessBinary extends DefaultTask {
 	private static final HashMap<String, String> classExtends = new HashMap<String, String>();
 
 	@TaskAction
