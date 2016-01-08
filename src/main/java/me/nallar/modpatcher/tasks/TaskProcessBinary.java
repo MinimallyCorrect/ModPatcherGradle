@@ -50,13 +50,11 @@ public class TaskProcessBinary extends DefaultTask {
 		generatedDirectory = generatedDirectory.getCanonicalFile();
 
 		if (!generatedDirectory.exists()) {
+			//noinspection ResultOfMethodCallIgnored
 			generatedDirectory.mkdir();
 		}
-		ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(new File(generatedDirectory, "extendsMap.obj")));
-		try {
+		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(new File(generatedDirectory, "extendsMap.obj")))) {
 			objectOutputStream.writeObject(classExtends);
-		} finally {
-			objectOutputStream.close();
 		}
 
 	}
