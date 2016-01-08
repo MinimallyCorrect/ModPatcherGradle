@@ -16,6 +16,10 @@ public class TaskProcessBinary extends DefaultTask {
 	@TaskAction
 	public void run() throws Exception {
 		File f = getProject().getTasksByName("deobfMcMCP", false).iterator().next().getOutputs().getFiles().iterator().next();
+
+		if (!f.exists())
+			return;
+
 		generateMappings(f);
 	}
 
