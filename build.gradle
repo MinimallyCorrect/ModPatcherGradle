@@ -8,17 +8,19 @@ plugins {
 
 defaultTasks 'build'
 
-archivesBaseName="ModPatcherGradle"
 group="me.nallar"
 version = "${buildVersion}-SNAPSHOT"
 
 repositories {
-    jcenter()
+	jcenter()
+	maven { url = 'http://repo.nallar.me/' }
 }
 
 dependencies {
-    provided gradleApi()
+	provided gradleApi()
 	provided "org.projectlombok:lombok:1.16.6"
+	compile "me.nallar:JavaTransformer:1.1"
+	compile "me.nallar:Mixin:1.0-SNAPSHOT"
 }
 
 // Source compiler configuration
@@ -33,25 +35,35 @@ tasks.withType(JavaCompile) {
 }
 
 jar.manifest.mainAttributes (
-    "Built-By": System.properties['user.name'],
-    "Created-By": System.properties['java.vm.version'] + " (" + System.properties['java.vm.vendor'] + ")",
-    "Implementation-Title": name,
-    "Implementation-Version": version
+	"Built-By": System.properties['user.name'],
+	"Created-By": System.properties['java.vm.version'] + " (" + System.properties['java.vm.vendor'] + ")",
+	"Implementation-Title": name,
+	"Implementation-Version": version
 )
 
+jar {
+	baseName = project.name
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	from((configurations.runtime - configurations.provided).filter { it.exists() }.collect {
+		it.isDirectory() ? it : zipTree(it)
+	}) {
+		exclude "META-INF/**"
+	}
+}
+
 artifacts {
-    archives jar
+	archives jar
 }
 
 pluginBundle {
-    website = 'http://www.gradle.org/'
-    vcsUrl = 'https://github.com/nallar/ModPatcherGradle'
-    description = 'Gradle plugin for ModPatcher Core Mods'
-    tags = ['minecraft']
-    plugins {
-        modpatcher {
-            id = 'me.nallar.ModPatcherGradle'
-            displayName = 'ModPatcher Gradle Plugin'
-        }
-    }
+	website = 'http://www.gradle.org/'
+	vcsUrl = 'https://github.com/nallar/ModPatcherGradle'
+	description = 'Gradle plugin for ModPatcher Core Mods'
+	tags = ['minecraft']
+	plugins << {
+		modpatcher {
+			id = 'me.nallar.ModPatcherGradle'
+			displayName = 'ModPatcher Gradle Plugin'
+		}
+	}
 }

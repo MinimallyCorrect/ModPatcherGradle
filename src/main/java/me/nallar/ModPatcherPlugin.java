@@ -1,21 +1,38 @@
 package me.nallar;
 
 import lombok.Data;
+import lombok.Getter;
 import lombok.val;
-import me.nallar.modpatcher.tasks.TaskProcessSource;
+import me.nallar.javatransformer.api.JavaTransformer;
+import me.nallar.mixin.internal.MixinApplicator;
 import me.nallar.modpatcher.tasks.TaskProcessBinary;
+import me.nallar.modpatcher.tasks.TaskProcessSource;
 import org.apache.log4j.Logger;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.SourceSet;
+
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 
 public class ModPatcherPlugin implements Plugin<Project> {
 	public static Logger logger = Logger.getLogger("ModPatcher");
-	public static ModPatcherGradleExtension extension = new ModPatcherGradleExtension();
 	public static String BINARY_PROCESSING_TASK = "processMcBin";
 	public static String SRC_PROCESSING_TASK = "processMcSrc";
 
+	public ModPatcherGradleExtension extension = new ModPatcherGradleExtension();
+	private Project project;
+	@Getter(lazy = true)
+	private final JavaTransformer mixinTransformer = makeMixinTransformer();
+
+	public static ModPatcherPlugin get(Project project) {
+		return (ModPatcherPlugin) project.getPlugins().findPlugin("me.nallar.ModPatcherGradle");
+	}
+
 	@Override
 	public void apply(Project project) {
+		this.project = project;
 		project.getPlugins().apply("net.minecraftforge.gradle.forge");
 
 		project.getExtensions().add("modpatcher", extension);
@@ -25,6 +42,36 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		tasks.create(SRC_PROCESSING_TASK, TaskProcessSource.class);
 
 		project.afterEvaluate(this::afterEvaluate);
+	}
+
+	public JavaTransformer makeMixinTransformer() {
+		val applicator = new MixinApplicator();
+		applicator.setNoMixinIsError(extension.noMixinIsError);
+		return applicator.getMixinTransformer(getSourceSet().getJava().getSrcDirs().iterator().next().toPath(), extension.getMixinPackageToUse());
+	}
+
+	public void mixinTransform(Path toTransform) {
+		if (extension.shouldMixin()) {
+			Path old = toTransform.resolveSibling(toTransform.getFileName().toString() + ".bak");
+			try {
+				Files.move(toTransform, old);
+				getMixinTransformer().transform(old, toTransform);
+				Files.delete(old);
+			} catch (IOException e) {
+				throw new IOError(e);
+			}
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private SourceSet getSourceSet() {
+		for (SourceSet s : (Iterable<SourceSet>) project.getProperties().get("sourceSets")) {
+			if (s.getName().equals("main")) {
+				return s;
+			}
+		}
+
+		throw new RuntimeException("Can't find main sourceSet");
 	}
 
 	public void afterEvaluate(Project project) {
@@ -41,7 +88,17 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 	@Data
 	public static class ModPatcherGradleExtension {
+		public String mixinPackage = "";
+		public boolean noMixinIsError = false;
 		public boolean extractGeneratedSources = false;
 		public boolean generateInheritanceHierarchy = false;
+
+		public String getMixinPackageToUse() {
+			return Objects.equals(mixinPackage, "all") ? null : mixinPackage;
+		}
+
+		public boolean shouldMixin() {
+			return !"".equals(mixinPackage);
+		}
 	}
 }

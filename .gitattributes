@@ -24,6 +24,7 @@
 *.tld           text
 *.txt           text
 *.xml           text
+*.gradle		text
 
 # These files are binary and should be left untouched
 # (binary is a macro for -text -diff)

@@ -1,6 +1,7 @@
 package me.nallar.modpatcher.tasks;
 
 import com.google.common.io.ByteStreams;
+import lombok.val;
 import me.nallar.ModPatcherPlugin;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
@@ -14,7 +15,7 @@ import java.util.*;
 import java.util.jar.*;
 
 public class TaskProcessBinary extends DefaultTask {
-	private static final HashMap<String, String> classExtends = new HashMap<String, String>();
+	private static final HashMap<String, String> classExtends = new HashMap<>();
 
 	private static void addClassToExtendsMap(byte[] inputCode) {
 		ClassReader classReader = new ClassReader(inputCode);
@@ -70,6 +71,8 @@ public class TaskProcessBinary extends DefaultTask {
 
 	@TaskAction
 	public void run() throws Exception {
+		val plugin = ModPatcherPlugin.get(getProject());
+
 		File f = getProject().getTasksByName("deobfMcMCP", false).iterator().next().getOutputs().getFiles().iterator().next();
 
 		if (!f.exists()) {
@@ -77,6 +80,9 @@ public class TaskProcessBinary extends DefaultTask {
 			return;
 		}
 
-		generateMappings(f);
+		if (plugin.extension.generateInheritanceHierarchy)
+			generateMappings(f);
+
+		plugin.mixinTransform(f.toPath());
 	}
 }
