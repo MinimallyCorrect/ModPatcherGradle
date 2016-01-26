@@ -19,7 +19,7 @@ repositories {
 dependencies {
 	provided gradleApi()
 	provided "org.projectlombok:lombok:1.16.6"
-	compile "me.nallar:JavaTransformer:1.1"
+	compile "me.nallar:JavaTransformer:1.2-SNAPSHOT"
 	compile "me.nallar:Mixin:1.0-SNAPSHOT"
 }
 
