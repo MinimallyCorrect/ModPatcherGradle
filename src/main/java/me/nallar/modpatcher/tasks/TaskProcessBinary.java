@@ -4,7 +4,9 @@ import com.google.common.io.ByteStreams;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.Opcodes;
+import org.omg.CORBA.StringHolder;
 
 import java.io.*;
 import java.util.*;
@@ -13,23 +15,29 @@ import java.util.jar.*;
 public class TaskProcessBinary extends DefaultTask {
 	private static final HashMap<String, String> classExtends = new HashMap<String, String>();
 
-	@TaskAction
-	public void run() throws Exception {
-		File f = getProject().getTasksByName("deobfMcMCP", false).iterator().next().getOutputs().getFiles().iterator().next();
-
-		if (!f.exists())
-			return;
-
-		generateMappings(f);
-	}
-
 	private static void addClassToExtendsMap(byte[] inputCode) {
 		ClassReader classReader = new ClassReader(inputCode);
-		ClassNode classNode = new ClassNode();
-		classReader.accept(classNode, 0);
-		String superName = classNode.superName.replace("/", ".");
+
+		StringHolder nameHolder = new StringHolder();
+		StringHolder superNameHolder = new StringHolder();
+		try {
+			classReader.accept(new ClassVisitor(Opcodes.ASM5) {
+				@Override
+				public void visit(int i, int i1, String name, String s1, String superName, String[] strings) {
+					nameHolder.value = name;
+					superNameHolder.value = superName;
+					throw new RuntimeException("visiting aborted");
+				}
+			}, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
+		} catch (RuntimeException e) {
+			if (!e.getMessage().equals("visiting aborted")) {
+				throw e;
+			}
+		}
+
+		String superName = superNameHolder.value == null ? null : superNameHolder.value.replace("/", ".");
 		if (superName != null && !superName.equals("java.lang.Object")) {
-			classExtends.put(classNode.name.replace("/", "."), superName);
+			classExtends.put(nameHolder.value.replace("/", "."), superName);
 		}
 	}
 
@@ -57,5 +65,15 @@ public class TaskProcessBinary extends DefaultTask {
 			objectOutputStream.writeObject(classExtends);
 		}
 
+	}
+
+	@TaskAction
+	public void run() throws Exception {
+		File f = getProject().getTasksByName("deobfMcMCP", false).iterator().next().getOutputs().getFiles().iterator().next();
+
+		if (!f.exists())
+			return;
+
+		generateMappings(f);
 	}
 }
