@@ -4,10 +4,12 @@ import lombok.Data;
 import lombok.val;
 import me.nallar.modpatcher.tasks.TaskProcessSource;
 import me.nallar.modpatcher.tasks.TaskProcessBinary;
+import org.apache.log4j.Logger;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 public class ModPatcherPlugin implements Plugin<Project> {
+	public static Logger logger = Logger.getLogger("ModPatcher");
 	public static ModPatcherGradleExtension extension = new ModPatcherGradleExtension();
 	public static String BINARY_PROCESSING_TASK = "processMcBin";
 	public static String SRC_PROCESSING_TASK = "processMcSrc";

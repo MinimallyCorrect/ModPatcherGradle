@@ -1,6 +1,7 @@
 package me.nallar.modpatcher.tasks;
 
 import com.google.common.io.ByteStreams;
+import me.nallar.ModPatcherPlugin;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 import org.objectweb.asm.ClassReader;
@@ -71,8 +72,10 @@ public class TaskProcessBinary extends DefaultTask {
 	public void run() throws Exception {
 		File f = getProject().getTasksByName("deobfMcMCP", false).iterator().next().getOutputs().getFiles().iterator().next();
 
-		if (!f.exists())
+		if (!f.exists()) {
+			ModPatcherPlugin.logger.warn("Could not find minecraft code to process. Expected to find it at " + f);
 			return;
+		}
 
 		generateMappings(f);
 	}

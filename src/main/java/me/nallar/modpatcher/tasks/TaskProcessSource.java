@@ -1,6 +1,7 @@
 package me.nallar.modpatcher.tasks;
 
 import com.google.common.io.ByteStreams;
+import me.nallar.ModPatcherPlugin;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 
@@ -17,7 +18,11 @@ public class TaskProcessSource extends DefaultTask {
 	}
 
 	private static void extractGeneratedSources(File jar) throws Exception {
-		System.out.println("Source dir " + jar);
+		if (!jar.exists()) {
+			ModPatcherPlugin.logger.warn("Could not find minecraft source to process. Expected to find it at " + jar);
+			return;
+		}
+
 		File generatedDirectory = new File("./generated/");
 		generatedDirectory = generatedDirectory.getCanonicalFile();
 		final File generatedSrcDirectory = new File(generatedDirectory, "src");
