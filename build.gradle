@@ -2,18 +2,15 @@ plugins {
 	id "com.gradle.plugin-publish" version "0.9.2"
 	id 'nebula.provided-base' version '3.0.3'
 	id "me.tatarka.retrolambda" version "3.2.4"
+	id 'groovy'
+	id 'maven'
 }
-
-apply plugin: 'groovy'
-apply plugin: 'maven'
 
 defaultTasks 'build'
 
 archivesBaseName="ModPatcherGradle"
 group="me.nallar"
 version = "${buildVersion}-SNAPSHOT"
-targetCompatibility = '1.8'
-sourceCompatibility = '1.8'
 
 repositories {
     jcenter()
@@ -22,6 +19,17 @@ repositories {
 dependencies {
     provided gradleApi()
 	provided "org.projectlombok:lombok:1.16.6"
+}
+
+// Source compiler configuration
+tasks.withType(JavaCompile) {
+	sourceCompatibility = 8
+	targetCompatibility = 8
+	options.with {
+		deprecation = true
+		encoding = 'UTF-8'
+		compilerArgs << "-Xlint:all" << "-Xlint:-path" << "-Xlint:-processing"
+	}
 }
 
 jar.manifest.mainAttributes (
