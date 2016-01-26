@@ -20,7 +20,7 @@ repositories {
 }
 
 dependencies {
-    compile gradleApi()
+    provided gradleApi()
 	provided "org.projectlombok:lombok:1.16.6"
 }
 
@@ -37,7 +37,7 @@ artifacts {
 
 pluginBundle {
     website = 'http://www.gradle.org/'
-    vcsUrl = 'https://github.com/me.nallar/ModPatcherGradle'
+    vcsUrl = 'https://github.com/nallar/ModPatcherGradle'
     description = 'Gradle plugin for ModPatcher Core Mods'
     tags = ['minecraft']
     plugins {
