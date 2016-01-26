@@ -8,6 +8,7 @@ plugins {
 
 defaultTasks 'build'
 
+archivesBaseName = project.name
 group="me.nallar"
 version = "${buildVersion}-SNAPSHOT"
 
