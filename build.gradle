@@ -21,8 +21,8 @@ configurations.all { resolutionStrategy.cacheChangingModulesFor 30, 'seconds' }
 dependencies {
 	provided gradleApi()
 	provided "org.projectlombok:lombok:1.16.6"
-	provided group: 'me.nallar', name: "JavaTransformer", version: "1.2-SNAPSHOT", changing: true
-	provided group: 'me.nallar', name: "Mixin", version: "1.0-SNAPSHOT", changing: true
+	compile group: 'me.nallar', name: "JavaTransformer", version: "1.2-SNAPSHOT", changing: true
+	compile group: 'me.nallar', name: "Mixin", version: "1.0-SNAPSHOT", changing: true
 	compile 'com.github.javaparser:javaparser-core:2.3.0'
 }
 
