@@ -56,8 +56,15 @@ public class ModPatcherPlugin implements Plugin<Project> {
 			try {
 				Files.deleteIfExists(old);
 				Files.move(toTransform, old);
-				getMixinTransformer().transform(old, toTransform);
-				Files.delete(old);
+				try {
+					getMixinTransformer().transform(old, toTransform);
+				} finally {
+					if (!Files.exists(toTransform)) {
+						Files.move(old, toTransform);
+					} else {
+						Files.delete(old);
+					}
+				}
 			} catch (IOException e) {
 				throw new IOError(e);
 			}
