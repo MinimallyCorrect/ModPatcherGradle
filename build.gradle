@@ -16,11 +16,13 @@ repositories {
 	maven { url = 'http://repo.nallar.me/' }
 }
 
+configurations.all { resolutionStrategy.cacheChangingModulesFor 30, 'seconds' }
+
 dependencies {
 	provided gradleApi()
 	provided "org.projectlombok:lombok:1.16.6"
-	compile "me.nallar:JavaTransformer:1.2-SNAPSHOT"
-	compile "me.nallar:Mixin:1.0-SNAPSHOT"
+	provided group: 'me.nallar', name: "JavaTransformer", version: "1.2-SNAPSHOT", changing: true
+	provided group: 'me.nallar', name: "Mixin", version: "1.0-SNAPSHOT", changing: true
 	compile 'com.github.javaparser:javaparser-core:2.3.0'
 }
 
