@@ -52,8 +52,9 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 	public void mixinTransform(Path toTransform) {
 		if (extension.shouldMixin()) {
-			Path old = toTransform.resolveSibling(toTransform.getFileName().toString() + ".bak");
+			Path old = toTransform.resolveSibling("bak_" + toTransform.getFileName().toString());
 			try {
+				Files.deleteIfExists(old);
 				Files.move(toTransform, old);
 				getMixinTransformer().transform(old, toTransform);
 				Files.delete(old);
