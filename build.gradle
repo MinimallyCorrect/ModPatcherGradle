@@ -44,12 +44,6 @@ jar.manifest.mainAttributes (
 
 jar {
 	baseName = project.name
-	/*duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	from((configurations.runtime - configurations.provided).filter { it.exists() }.collect {
-		it.isDirectory() ? it : zipTree(it)
-	}) {
-		exclude "META-INF/**"
-	}*/
 }
 
 artifacts {
