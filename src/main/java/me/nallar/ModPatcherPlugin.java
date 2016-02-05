@@ -47,7 +47,8 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	public JavaTransformer makeMixinTransformer() {
 		val applicator = new MixinApplicator();
 		applicator.setNoMixinIsError(extension.noMixinIsError);
-		return applicator.getMixinTransformer(getSourceSet().getJava().getSrcDirs().iterator().next().toPath(), extension.getMixinPackageToUse());
+		applicator.addSource(getSourceSet().getJava().getSrcDirs().iterator().next().toPath(), extension.getMixinPackageToUse());
+		return applicator.getMixinTransformer();
 	}
 
 	public void mixinTransform(Path toTransform) {
