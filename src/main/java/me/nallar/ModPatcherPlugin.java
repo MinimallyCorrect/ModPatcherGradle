@@ -104,7 +104,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	private List<File> sourceDirsWithMixins(boolean root) {
 		val results = new ArrayList<File>();
 
-		val mixinPackage = extension.getMixinPackageToUse();
+		val mixinPackage = extension.getMixinPackageToUse().replace('.', '/');
 
 		for (SourceSet s : (Iterable<SourceSet>) project.getProperties().get("sourceSets")) {
 			for (File javaDir : s.getJava().getSrcDirs()) {
