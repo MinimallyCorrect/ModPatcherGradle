@@ -1,10 +1,7 @@
 package me.nallar.modpatcher.tasks;
 
 import com.google.common.io.ByteStreams;
-import lombok.val;
 import me.nallar.ModPatcherPlugin;
-import org.gradle.api.DefaultTask;
-import org.gradle.api.tasks.TaskAction;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
@@ -14,8 +11,20 @@ import java.io.*;
 import java.util.*;
 import java.util.jar.*;
 
-public class TaskProcessBinary extends DefaultTask {
+public class BinaryProcessor {
 	private static final HashMap<String, String> classExtends = new HashMap<>();
+
+	public static void process(ModPatcherPlugin plugin, File file) throws Exception {
+		if (!file.exists()) {
+			ModPatcherPlugin.logger.warn("Could not find minecraft code to process. Expected to find it at " + file);
+			return;
+		}
+
+		if (plugin.extension.generateInheritanceHierarchy)
+			generateMappings(file);
+
+		plugin.mixinTransform(file.toPath());
+	}
 
 	private static void addClassToExtendsMap(byte[] inputCode) {
 		ClassReader classReader = new ClassReader(inputCode);
@@ -67,22 +76,5 @@ public class TaskProcessBinary extends DefaultTask {
 			objectOutputStream.writeObject(classExtends);
 		}
 
-	}
-
-	@TaskAction
-	public void run() throws Exception {
-		val plugin = ModPatcherPlugin.get(getProject());
-
-		File f = getProject().getTasksByName("deobfMcMCP", false).iterator().next().getOutputs().getFiles().iterator().next();
-
-		if (!f.exists()) {
-			ModPatcherPlugin.logger.warn("Could not find minecraft code to process. Expected to find it at " + f);
-			return;
-		}
-
-		if (plugin.extension.generateInheritanceHierarchy)
-			generateMappings(f);
-
-		plugin.mixinTransform(f.toPath());
 	}
 }

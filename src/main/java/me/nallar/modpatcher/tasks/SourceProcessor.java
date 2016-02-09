@@ -1,17 +1,26 @@
 package me.nallar.modpatcher.tasks;
 
 import com.google.common.io.ByteStreams;
-import lombok.val;
 import me.nallar.ModPatcherPlugin;
-import org.gradle.api.DefaultTask;
-import org.gradle.api.tasks.TaskAction;
 
 import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.*;
 import java.util.jar.*;
 
-public class TaskProcessSource extends DefaultTask {
+public class SourceProcessor {
+	public static void process(ModPatcherPlugin plugin, File file) throws Exception {
+		if (!file.exists()) {
+			ModPatcherPlugin.logger.warn("Could not find minecraft source to process. Expected to find it at " + file);
+			return;
+		}
+
+		if (plugin.extension.extractGeneratedSources)
+			extractGeneratedSources(file);
+
+		plugin.mixinTransform(file.toPath());
+	}
+
 	@SuppressWarnings("ResultOfMethodCallIgnored")
 	private static void extractGeneratedSources(File jar) throws Exception {
 		File generatedDirectory = new File("./generated/");
@@ -48,22 +57,6 @@ public class TaskProcessSource extends DefaultTask {
 
 	private static void deleteDirectory(Path path) throws IOException {
 		java.nio.file.Files.walkFileTree(path, new PathSimpleFileVisitor());
-	}
-
-	@TaskAction
-	public void run() throws Exception {
-		val plugin = ModPatcherPlugin.get(getProject());
-
-		File f = getProject().getTasksByName("remapMcSources", false).iterator().next().getOutputs().getFiles().iterator().next();
-		if (!f.exists()) {
-			ModPatcherPlugin.logger.warn("Could not find minecraft source to process. Expected to find it at " + f);
-			return;
-		}
-
-		if (plugin.extension.extractGeneratedSources)
-			extractGeneratedSources(f);
-
-		plugin.mixinTransform(f.toPath());
 	}
 
 	private static class PathSimpleFileVisitor extends SimpleFileVisitor<Path> {

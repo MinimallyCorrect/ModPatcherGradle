@@ -2,24 +2,31 @@ package me.nallar;
 
 import lombok.Data;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.val;
 import me.nallar.javatransformer.api.JavaTransformer;
 import me.nallar.mixin.internal.MixinApplicator;
-import me.nallar.modpatcher.tasks.TaskProcessBinary;
-import me.nallar.modpatcher.tasks.TaskProcessSource;
+import me.nallar.modpatcher.tasks.BinaryProcessor;
+import me.nallar.modpatcher.tasks.SourceProcessor;
 import org.apache.log4j.Logger;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskState;
 
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 
 public class ModPatcherPlugin implements Plugin<Project> {
+	public static final String RECOMPILE_MC_TASK = "recompileMc";
+	public static final String SETUP_CI_WORKSPACE_TASK = "setupCiWorkspace";
+	public static final String COMPILE_JAVA_TASK = "compileJava";
+	public static final String DEOBF_BINARY_TASK = "deobfMcMCP";
+	public static final String REMAP_SOURCE_TASK = "remapMcSources";
 	public static Logger logger = Logger.getLogger("ModPatcher");
-	public static String BINARY_PROCESSING_TASK = "processMcBin";
-	public static String SRC_PROCESSING_TASK = "processMcSrc";
 
 	public ModPatcherGradleExtension extension = new ModPatcherGradleExtension();
 	private Project project;
@@ -36,10 +43,28 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		project.getPlugins().apply("net.minecraftforge.gradle.forge");
 
 		project.getExtensions().add("modpatcher", extension);
+		project.getGradle().addListener(new TaskExecutionListener() {
+			@Override
+			public void beforeExecute(Task task) {
+			}
 
-		val tasks = project.getTasks();
-		tasks.create(BINARY_PROCESSING_TASK, TaskProcessBinary.class);
-		tasks.create(SRC_PROCESSING_TASK, TaskProcessSource.class);
+			@SneakyThrows
+			@Override
+			public void afterExecute(Task task, TaskState taskState) {
+				if (taskState.getSkipped() || taskState.getUpToDate() || !taskState.getDidWork())
+					return;
+
+				if (task.getName().equalsIgnoreCase(DEOBF_BINARY_TASK)) {
+					File f = task.getOutputs().getFiles().iterator().next();
+
+					BinaryProcessor.process(ModPatcherPlugin.this, f);
+				} else if (task.getName().equalsIgnoreCase(REMAP_SOURCE_TASK)) {
+					File f = task.getOutputs().getFiles().iterator().next();
+
+					SourceProcessor.process(ModPatcherPlugin.this, f);
+				}
+			}
+		});
 
 		project.afterEvaluate(this::afterEvaluate);
 	}
@@ -47,7 +72,9 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	public JavaTransformer makeMixinTransformer() {
 		val applicator = new MixinApplicator();
 		applicator.setNoMixinIsError(extension.noMixinIsError);
-		applicator.addSource(getSourceSet().getJava().getSrcDirs().iterator().next().toPath(), extension.getMixinPackageToUse());
+		for (File file : sourceDirsWithMixins(true)) {
+			applicator.addSource(file.toPath(), extension.getMixinPackageToUse());
+		}
 		return applicator.getMixinTransformer();
 	}
 
@@ -73,26 +100,46 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private SourceSet getSourceSet() {
+	@SneakyThrows
+	private List<File> sourceDirsWithMixins(boolean root) {
+		val results = new ArrayList<File>();
+
+		val mixinPackage = extension.getMixinPackageToUse();
+
 		for (SourceSet s : (Iterable<SourceSet>) project.getProperties().get("sourceSets")) {
-			if (s.getName().equals("main")) {
-				return s;
+			for (File javaDir : s.getJava().getSrcDirs()) {
+				File mixinDir = fileWithChild(javaDir, mixinPackage);
+				if (mixinDir.isDirectory()) {
+					if (root)
+						results.add(javaDir);
+					else
+						results.add(mixinDir);
+				}
 			}
 		}
 
-		throw new RuntimeException("Can't find main sourceSet");
+		if (results.isEmpty())
+			throw new FileNotFoundException("Couldn't find any mixin packages! Searched for: " + mixinPackage);
+
+		return results;
+	}
+
+	private File fileWithChild(File javaDir, String mixinPackageToUse) {
+		return mixinPackageToUse == null ? javaDir : new File(javaDir, mixinPackageToUse);
 	}
 
 	public void afterEvaluate(Project project) {
 		val tasks = project.getTasks();
 
-		// generateInheritanceHierarchy required for setupCiWorkspace. Runs after deobfMcMCP
-		tasks.getByName(BINARY_PROCESSING_TASK).mustRunAfter("deobfMcMCP");
-		tasks.getByName("compileJava").dependsOn(BINARY_PROCESSING_TASK);
-		tasks.getByName("setupCiWorkspace").dependsOn(BINARY_PROCESSING_TASK);
+		val mixinDirs = sourceDirsWithMixins(true).toArray();
 
-		tasks.getByName(SRC_PROCESSING_TASK).mustRunAfter("remapMcSources");
-		tasks.getByName("recompileMc").dependsOn(SRC_PROCESSING_TASK);
+		tasks.getByName(DEOBF_BINARY_TASK).getInputs().files(mixinDirs);
+		tasks.getByName(REMAP_SOURCE_TASK).getInputs().files(mixinDirs);
+
+		tasks.getByName(COMPILE_JAVA_TASK).dependsOn(DEOBF_BINARY_TASK);
+		tasks.getByName(SETUP_CI_WORKSPACE_TASK).dependsOn(DEOBF_BINARY_TASK);
+
+		tasks.getByName(RECOMPILE_MC_TASK).dependsOn(REMAP_SOURCE_TASK);
 	}
 
 	@Data
