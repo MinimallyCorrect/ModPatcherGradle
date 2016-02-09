@@ -9,12 +9,11 @@ import me.nallar.mixin.internal.MixinApplicator;
 import me.nallar.modpatcher.tasks.BinaryProcessor;
 import me.nallar.modpatcher.tasks.SourceProcessor;
 import org.apache.log4j.Logger;
+import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.TaskState;
 
 import java.io.*;
 import java.nio.file.*;
@@ -43,28 +42,6 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		project.getPlugins().apply("net.minecraftforge.gradle.forge");
 
 		project.getExtensions().add("modpatcher", extension);
-		project.getGradle().addListener(new TaskExecutionListener() {
-			@Override
-			public void beforeExecute(Task task) {
-			}
-
-			@SneakyThrows
-			@Override
-			public void afterExecute(Task task, TaskState taskState) {
-				if (taskState.getSkipped() || taskState.getUpToDate() || !taskState.getDidWork())
-					return;
-
-				if (task.getName().equalsIgnoreCase(DEOBF_BINARY_TASK)) {
-					File f = task.getOutputs().getFiles().iterator().next();
-
-					BinaryProcessor.process(ModPatcherPlugin.this, f);
-				} else if (task.getName().equalsIgnoreCase(REMAP_SOURCE_TASK)) {
-					File f = task.getOutputs().getFiles().iterator().next();
-
-					SourceProcessor.process(ModPatcherPlugin.this, f);
-				}
-			}
-		});
 
 		project.afterEvaluate(this::afterEvaluate);
 	}
@@ -135,6 +112,24 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 		tasks.getByName(DEOBF_BINARY_TASK).getInputs().files(mixinDirs);
 		tasks.getByName(REMAP_SOURCE_TASK).getInputs().files(mixinDirs);
+		tasks.getByName(DEOBF_BINARY_TASK).doLast(new Action<Task>() {
+			@SneakyThrows
+			@Override
+			public void execute(Task task) {
+				File f = task.getOutputs().getFiles().iterator().next();
+
+				BinaryProcessor.process(ModPatcherPlugin.this, f);
+			}
+		});
+		tasks.getByName(REMAP_SOURCE_TASK).doLast(new Action<Task>() {
+			@SneakyThrows
+			@Override
+			public void execute(Task task) {
+				File f = task.getOutputs().getFiles().iterator().next();
+
+				SourceProcessor.process(ModPatcherPlugin.this, f);
+			}
+		});
 
 		tasks.getByName(COMPILE_JAVA_TASK).dependsOn(DEOBF_BINARY_TASK);
 		tasks.getByName(SETUP_CI_WORKSPACE_TASK).dependsOn(DEOBF_BINARY_TASK);
