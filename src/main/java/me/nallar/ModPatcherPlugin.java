@@ -131,10 +131,13 @@ public class ModPatcherPlugin implements Plugin<Project> {
 			}
 		});
 
-		tasks.getByName(COMPILE_JAVA_TASK).dependsOn(DEOBF_BINARY_TASK);
-		tasks.getByName(SETUP_CI_WORKSPACE_TASK).dependsOn(DEOBF_BINARY_TASK);
+		/*
+		TODO: Fix tasks never being up-to-date?
 
-		tasks.getByName(RECOMPILE_MC_TASK).dependsOn(REMAP_SOURCE_TASK);
+		We need to setDirty() the DEOBF_BINARY_TASK (deobfMcMcp/DeobfuscateJar), but can't.
+		That functionality was removed in https://github.com/MinecraftForge/ForgeGradle/commit/a5509a29631c6ced1a7ffc2080652d76c66ce5c5
+		Need to ask @AbrarSyed
+		*/
 	}
 
 	@Data
