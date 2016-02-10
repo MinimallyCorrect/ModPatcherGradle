@@ -10,6 +10,7 @@ import me.nallar.modpatcher.tasks.BinaryProcessor;
 import me.nallar.modpatcher.tasks.SourceProcessor;
 import net.minecraftforge.gradle.user.UserBaseExtension;
 import net.minecraftforge.gradle.user.UserBasePlugin;
+import net.minecraftforge.gradle.util.caching.CachedTask;
 import org.apache.log4j.Logger;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -30,6 +31,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	public static final String PLUGIN_FORGE_GRADLE_ID = "net.minecraftforge.gradle.forge";
 	public static final Logger logger = Logger.getLogger("ModPatcher");
 	public static final String CLASS_GRADLE_TASKACTIONWRAPPER = "org.gradle.api.internal.AbstractTask$TaskActionWrapper";
+	public static final boolean DISABLE_CACHING = true;
 
 	public ModPatcherGradleExtension extension = new ModPatcherGradleExtension();
 	private Project project;
@@ -37,7 +39,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	private final JavaTransformer mixinTransformer = makeMixinTransformer();
 
 	// Add before WriteCacheAction, or cache will be invalidated every time
-	private static void doBeforeWriteCacheAction(Task t, Action<Task> action) {
+	private static Task doBeforeWriteCacheAction(Task t, Action<Task> action) {
 		val actions = t.getActions();
 
 		int writeCachePosition = actions.size();
@@ -47,12 +49,16 @@ public class ModPatcherPlugin implements Plugin<Project> {
 			}
 		}
 
-		if (writeCachePosition == actions.size()) {
+		if (DISABLE_CACHING && t instanceof CachedTask) {
+			((CachedTask) t).setDoesCache(false);
+		} else if (writeCachePosition == actions.size()) {
 			logger.warn("Failed to find WriteCacheAction in " + actions);
 			actions.forEach(it -> logger.warn(innerAction(it)));
 		}
 
 		actions.add(writeCachePosition, action);
+
+		return t;
 	}
 
 	@SuppressWarnings("unchecked")
