@@ -46,8 +46,10 @@ public class ModPatcherPlugin implements Plugin<Project> {
 			}
 		}
 
-		if (writeCachePosition == actions.size())
+		if (writeCachePosition == actions.size()) {
 			logger.warn("Failed to find WriteCacheAction in " + actions);
+			actions.forEach(logger::warn);
+		}
 
 		actions.add(writeCachePosition, action);
 	}
