@@ -60,13 +60,13 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		val actionClass = action.getClass();
 		if (actionClass.getName().equals(CLASS_GRADLE_TASKACTIONWRAPPER)) {
 			try {
-				val innerField = actionClass.getField("action");
+				val innerField = actionClass.getDeclaredField("action");
 				innerField.setAccessible(true);
 				val inner = (Action<? super Task>) innerField.get(action);
 				if (inner != null)
 					return inner;
 			} catch (Exception e) {
-				logger.warn("Failed to extract inner action from wrapper");
+				logger.warn("Failed to extract inner action from wrapper", e);
 			}
 		}
 		return action;
