@@ -8,6 +8,8 @@ import me.nallar.javatransformer.api.JavaTransformer;
 import me.nallar.mixin.internal.MixinApplicator;
 import me.nallar.modpatcher.tasks.BinaryProcessor;
 import me.nallar.modpatcher.tasks.SourceProcessor;
+import net.minecraftforge.gradle.user.UserBaseExtension;
+import net.minecraftforge.gradle.user.UserBasePlugin;
 import org.apache.log4j.Logger;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
@@ -25,6 +27,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	public static final String COMPILE_JAVA_TASK = "compileJava";
 	public static final String DEOBF_BINARY_TASK = "deobfMcMCP";
 	public static final String REMAP_SOURCE_TASK = "remapMcSources";
+	public static final String PLUGIN_FORGE_GRADLE_ID = "net.minecraftforge.gradle.forge";
 	public static Logger logger = Logger.getLogger("ModPatcher");
 
 	public ModPatcherGradleExtension extension = new ModPatcherGradleExtension();
@@ -32,14 +35,28 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	@Getter(lazy = true)
 	private final JavaTransformer mixinTransformer = makeMixinTransformer();
 
-	public static ModPatcherPlugin get(Project project) {
-		return (ModPatcherPlugin) project.getPlugins().findPlugin("me.nallar.ModPatcherGradle");
+	// Add before WriteCacheAction, or cache will be invalidated every time
+	private static void doBeforeWriteCacheAction(Task t, Action<Task> action) {
+		val actions = t.getActions();
+
+		int writeCachePosition = actions.size();
+		for (int i = 0; i < actions.size(); i++) {
+			if (actions.get(i).getClass().getName().equalsIgnoreCase("WriteCacheAction")) {
+				writeCachePosition = i;
+			}
+		}
+
+		actions.add(writeCachePosition, action);
 	}
 
 	@Override
 	public void apply(Project project) {
 		this.project = project;
-		project.getPlugins().apply("net.minecraftforge.gradle.forge");
+		project.getPlugins().apply(PLUGIN_FORGE_GRADLE_ID);
+
+		// Ensure ForgeGradle useLocalCache -> true
+		val forgeGradle = ((UserBasePlugin) project.getPlugins().getPlugin(PLUGIN_FORGE_GRADLE_ID));
+		((UserBaseExtension) forgeGradle.getExtension()).setUseDepAts(true);
 
 		project.getExtensions().add("modpatcher", extension);
 
@@ -112,7 +129,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 		tasks.getByName(DEOBF_BINARY_TASK).getInputs().files(mixinDirs);
 		tasks.getByName(REMAP_SOURCE_TASK).getInputs().files(mixinDirs);
-		tasks.getByName(DEOBF_BINARY_TASK).doLast(new Action<Task>() {
+		doBeforeWriteCacheAction(tasks.getByName(DEOBF_BINARY_TASK), new Action<Task>() {
 			@SneakyThrows
 			@Override
 			public void execute(Task task) {
@@ -121,7 +138,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 				BinaryProcessor.process(ModPatcherPlugin.this, f);
 			}
 		});
-		tasks.getByName(REMAP_SOURCE_TASK).doLast(new Action<Task>() {
+		doBeforeWriteCacheAction(tasks.getByName(REMAP_SOURCE_TASK), new Action<Task>() {
 			@SneakyThrows
 			@Override
 			public void execute(Task task) {
@@ -130,18 +147,6 @@ public class ModPatcherPlugin implements Plugin<Project> {
 				SourceProcessor.process(ModPatcherPlugin.this, f);
 			}
 		});
-
-		/*
-		TODO: Fix tasks never being up-to-date?
-
-		Via @AbrarSyed:
-		Adding empty access transformer may solve the problem
-		will result in setting useLocalCache = true
-		(can we get a "forceLocalCache" setting added to FG UserBaseExtension?)
-
-		Other possiblities:
-		Instead of doLast, add to Actions list before WriteCacheAction if it's there?
-		*/
 	}
 
 	@Data
