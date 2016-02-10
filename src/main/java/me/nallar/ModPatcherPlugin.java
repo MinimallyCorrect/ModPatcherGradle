@@ -136,6 +136,8 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 		Via @AbrarSyed:
 		Adding empty access transformer may solve the problem
+		will result in setting useLocalCache = true
+		(can we get a "forceLocalCache" setting added to FG UserBaseExtension?)
 
 		Other possiblities:
 		Instead of doLast, add to Actions list before WriteCacheAction if it's there?
