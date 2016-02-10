@@ -28,7 +28,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	public static final String DEOBF_BINARY_TASK = "deobfMcMCP";
 	public static final String REMAP_SOURCE_TASK = "remapMcSources";
 	public static final String PLUGIN_FORGE_GRADLE_ID = "net.minecraftforge.gradle.forge";
-	public static Logger logger = Logger.getLogger("ModPatcher");
+	public static final Logger logger = Logger.getLogger("ModPatcher");
 
 	public ModPatcherGradleExtension extension = new ModPatcherGradleExtension();
 	private Project project;
@@ -41,10 +41,13 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 		int writeCachePosition = actions.size();
 		for (int i = 0; i < actions.size(); i++) {
-			if (actions.get(i).getClass().getName().equalsIgnoreCase("WriteCacheAction")) {
+			if (actions.get(i).getClass().getName().endsWith("WriteCacheAction")) {
 				writeCachePosition = i;
 			}
 		}
+
+		if (writeCachePosition == actions.size())
+			logger.warn("Failed to find WriteCacheAction in " + actions);
 
 		actions.add(writeCachePosition, action);
 	}
