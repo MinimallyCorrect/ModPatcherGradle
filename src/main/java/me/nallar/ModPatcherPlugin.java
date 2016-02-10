@@ -31,7 +31,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	public static final String PLUGIN_FORGE_GRADLE_ID = "net.minecraftforge.gradle.forge";
 	public static final Logger logger = Logger.getLogger("ModPatcher");
 	public static final String CLASS_GRADLE_TASKACTIONWRAPPER = "org.gradle.api.internal.AbstractTask$TaskActionWrapper";
-	public static final boolean DISABLE_CACHING = true;
+	public static final boolean DISABLE_CACHING = Boolean.parseBoolean(System.getProperty("ModPatcherGradle.disableCaching", "true"));
 
 	public ModPatcherGradleExtension extension = new ModPatcherGradleExtension();
 	private Project project;
