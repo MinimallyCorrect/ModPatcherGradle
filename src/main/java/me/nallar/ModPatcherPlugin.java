@@ -134,9 +134,11 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		/*
 		TODO: Fix tasks never being up-to-date?
 
-		We need to setDirty() the DEOBF_BINARY_TASK (deobfMcMcp/DeobfuscateJar), but can't.
-		That functionality was removed in https://github.com/MinecraftForge/ForgeGradle/commit/a5509a29631c6ced1a7ffc2080652d76c66ce5c5
-		Need to ask @AbrarSyed
+		Via @AbrarSyed:
+		Adding empty access transformer may solve the problem
+
+		Other possiblities:
+		Instead of doLast, add to Actions list before WriteCacheAction if it's there?
 		*/
 	}
 
