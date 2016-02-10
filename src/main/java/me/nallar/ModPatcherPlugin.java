@@ -23,9 +23,6 @@ import java.nio.file.*;
 import java.util.*;
 
 public class ModPatcherPlugin implements Plugin<Project> {
-	public static final String RECOMPILE_MC_TASK = "recompileMc";
-	public static final String SETUP_CI_WORKSPACE_TASK = "setupCiWorkspace";
-	public static final String COMPILE_JAVA_TASK = "compileJava";
 	public static final String DEOBF_BINARY_TASK = "deobfMcMCP";
 	public static final String REMAP_SOURCE_TASK = "remapMcSources";
 	public static final String PLUGIN_FORGE_GRADLE_ID = "net.minecraftforge.gradle.forge";
