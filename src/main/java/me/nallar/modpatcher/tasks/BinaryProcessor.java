@@ -20,10 +20,10 @@ public class BinaryProcessor {
 			return;
 		}
 
+		plugin.mixinTransform(file.toPath());
+
 		if (plugin.extension.generateInheritanceHierarchy)
 			generateMappings(file);
-
-		plugin.mixinTransform(file.toPath());
 	}
 
 	private static void addClassToExtendsMap(byte[] inputCode) {

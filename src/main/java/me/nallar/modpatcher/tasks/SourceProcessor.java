@@ -15,10 +15,10 @@ public class SourceProcessor {
 			return;
 		}
 
+		plugin.mixinTransform(file.toPath());
+
 		if (plugin.extension.extractGeneratedSources)
 			extractGeneratedSources(file);
-
-		plugin.mixinTransform(file.toPath());
 	}
 
 	@SuppressWarnings("ResultOfMethodCallIgnored")
