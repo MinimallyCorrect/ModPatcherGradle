@@ -29,6 +29,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	public static final Logger logger = Logger.getLogger("ModPatcher");
 	public static final String CLASS_GRADLE_TASKACTIONWRAPPER = "org.gradle.api.internal.AbstractTask$TaskActionWrapper";
 	public static final boolean DISABLE_CACHING = Boolean.parseBoolean(System.getProperty("ModPatcherGradle.disableCaching", "true"));
+	public static final String APPLY_SOURCE_PATCHES_TASK = "applySourcePatches";
 
 	public ModPatcherGradleExtension extension = new ModPatcherGradleExtension();
 	private Project project;
@@ -46,9 +47,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 			}
 		}
 
-		if (DISABLE_CACHING && t instanceof CachedTask) {
-			((CachedTask) t).setDoesCache(false);
-		} else if (writeCachePosition == actions.size()) {
+		if (!disableCaching(t) && writeCachePosition == actions.size()) {
 			logger.warn("Failed to find WriteCacheAction in " + actions);
 			actions.forEach(it -> logger.warn(innerAction(it)));
 		}
@@ -56,6 +55,14 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		actions.add(writeCachePosition, action);
 
 		return t;
+	}
+
+	private static boolean disableCaching(Task t) {
+		if (DISABLE_CACHING && t instanceof CachedTask) {
+			((CachedTask) t).setDoesCache(false);
+			return true;
+		}
+		return false;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -155,6 +162,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 		tasks.getByName(DEOBF_BINARY_TASK).getInputs().files(mixinDirs);
 		tasks.getByName(REMAP_SOURCE_TASK).getInputs().files(mixinDirs);
+		tasks.getByName(APPLY_SOURCE_PATCHES_TASK).getInputs().files(mixinDirs);
 		doBeforeWriteCacheAction(tasks.getByName(DEOBF_BINARY_TASK), new Action<Task>() {
 			@SneakyThrows
 			@Override
@@ -164,6 +172,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 				BinaryProcessor.process(ModPatcherPlugin.this, f);
 			}
 		});
+		disableCaching(tasks.getByName(APPLY_SOURCE_PATCHES_TASK));
 		doBeforeWriteCacheAction(tasks.getByName(REMAP_SOURCE_TASK), new Action<Task>() {
 			@SneakyThrows
 			@Override
