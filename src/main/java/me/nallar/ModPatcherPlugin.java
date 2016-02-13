@@ -18,9 +18,15 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.SourceSet;
 
-import java.io.*;
-import java.nio.file.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOError;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 public class ModPatcherPlugin implements Plugin<Project> {
 	public static final String DEOBF_BINARY_TASK = "deobfMcMCP";
@@ -187,7 +193,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	@Data
 	public static class ModPatcherGradleExtension {
 		public String mixinPackage = "";
-		public boolean noMixinIsError = false;
+		public boolean noMixinIsError = true;
 		public boolean extractGeneratedSources = false;
 		public boolean generateInheritanceHierarchy = false;
 
