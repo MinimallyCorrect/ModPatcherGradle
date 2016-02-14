@@ -40,11 +40,15 @@ tasks.withType(JavaCompile) {
 	}
 }
 
+ext.buildNumber = System.getenv("BUILD_NUMBER") ?: 0
+ext.ciSystem = System.getenv("JENKINS_URL") ? 'Jenkins' : 'unknown'
+ext.commit = System.getenv("GIT_COMMIT") ?: 'unknown'
+
 jar.manifest.mainAttributes (
 	"Built-By": System.properties['user.name'],
 	"Created-By": System.properties['java.vm.version'] + " (" + System.properties['java.vm.vendor'] + ")",
 	"Implementation-Title": name,
-	"Implementation-Version": version
+	"Implementation-Version": version + "+" + ciSystem + "-b" + buildNumber + ".git-" + commit,
 )
 
 jar {
