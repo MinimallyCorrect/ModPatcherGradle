@@ -189,11 +189,13 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 	private void addInputs(Task t, Object[] mixinDirs) {
 		t.getInputs().files(mixinDirs);
-		t.getInputs().property("ModPatcherGradleVersion", getImplementationVersion());
+		t.getInputs().property("ModPatcherGradleVersion", getImplementationVersion(this.getClass()));
+		t.getInputs().property("MixinVersion", getImplementationVersion(MixinApplicator.class));
+		t.getInputs().property("JavaTransformerVersion", getImplementationVersion(JavaTransformer.class));
 	}
 
-	private String getImplementationVersion() {
-		val version = this.getClass().getPackage().getImplementationVersion();
+	private String getImplementationVersion(Class c) {
+		val version = c.getPackage().getImplementationVersion();
 		logger.fatal("Version: " + version);
 		return version;
 	}
