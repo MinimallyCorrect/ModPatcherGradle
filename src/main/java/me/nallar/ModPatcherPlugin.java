@@ -17,6 +17,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskInputs;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -188,16 +189,15 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	}
 
 	private void addInputs(Task t, Object[] mixinDirs) {
-		t.getInputs().files(mixinDirs);
-		t.getInputs().property("ModPatcherGradleVersion", getImplementationVersion(this.getClass()));
-		t.getInputs().property("MixinVersion", getImplementationVersion(MixinApplicator.class));
-		t.getInputs().property("JavaTransformerVersion", getImplementationVersion(JavaTransformer.class));
+		val inputs = t.getInputs();
+		inputs.files(mixinDirs);
+		addVersion(inputs, "ModPatcherGradle", this.getClass());
+		addVersion(inputs, "Mixin", MixinApplicator.class);
+		addVersion(inputs, "JavaTransformer", JavaTransformer.class);
 	}
 
-	private String getImplementationVersion(Class c) {
-		val version = c.getPackage().getImplementationVersion();
-		logger.fatal("Version: " + version);
-		return version;
+	private void addVersion(TaskInputs inputs, String name, Class c) {
+		inputs.property(name + "Version", c.getPackage().getImplementationVersion());
 	}
 
 	@Data
