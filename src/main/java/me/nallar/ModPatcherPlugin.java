@@ -82,6 +82,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		return action;
 	}
 
+	@SneakyThrows
 	@Override
 	public void apply(Project project) {
 		this.project = project;
@@ -90,16 +91,11 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		// Ensure ForgeGradle useLocalCache -> true
 		val forgeGradle = ((UserBasePlugin) project.getPlugins().getPlugin(PLUGIN_FORGE_GRADLE_ID));
 
-		try {
-			// use reflection if we can
-			val useLocalCacheField = UserBasePlugin.class.getDeclaredField("useLocalCache");
-			useLocalCacheField.setAccessible(true);
-			useLocalCacheField.set(forgeGradle, true);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
-			// or fall back to setUseDepAts which enables it for us, with a bit of a performance hit\
-			logger.trace("Failed to set useLocalCache with reflection", e);
-			((UserBaseExtension) forgeGradle.getExtension()).setUseDepAts(true);
-		}
+		val blank_at = new File(project.getBuildDir(), "blank_at.cfg");
+		if (blank_at.exists())
+			Files.write(blank_at.toPath(), new byte[0]);
+
+		((UserBaseExtension) forgeGradle.getExtension()).at(blank_at);
 
 		project.getExtensions().add("modpatcher", extension);
 
