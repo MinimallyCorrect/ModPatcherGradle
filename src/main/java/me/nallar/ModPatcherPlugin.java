@@ -19,15 +19,9 @@ import org.gradle.api.Task;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskInputs;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOError;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 
 public class ModPatcherPlugin implements Plugin<Project> {
 	public static final String DEOBF_BINARY_TASK = "deobfMcMCP";
@@ -95,7 +89,17 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 		// Ensure ForgeGradle useLocalCache -> true
 		val forgeGradle = ((UserBasePlugin) project.getPlugins().getPlugin(PLUGIN_FORGE_GRADLE_ID));
-		((UserBaseExtension) forgeGradle.getExtension()).setUseDepAts(true);
+
+		try {
+			// use reflection if we can
+			val useLocalCacheField = UserBasePlugin.class.getDeclaredField("useLocalCache");
+			useLocalCacheField.setAccessible(true);
+			useLocalCacheField.set(forgeGradle, true);
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			// or fall back to setUseDepAts which enables it for us, with a bit of a performance hit\
+			logger.trace("Failed to set useLocalCache with reflection", e);
+			((UserBaseExtension) forgeGradle.getExtension()).setUseDepAts(true);
+		}
 
 		project.getExtensions().add("modpatcher", extension);
 
