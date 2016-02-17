@@ -92,7 +92,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		val forgeGradle = ((UserBasePlugin) project.getPlugins().getPlugin(PLUGIN_FORGE_GRADLE_ID));
 
 		val blank_at = new File(project.getBuildDir(), "blank_at.cfg");
-		if (blank_at.exists())
+		if (!blank_at.exists())
 			Files.write(blank_at.toPath(), new byte[0]);
 
 		((UserBaseExtension) forgeGradle.getExtension()).at(blank_at);
