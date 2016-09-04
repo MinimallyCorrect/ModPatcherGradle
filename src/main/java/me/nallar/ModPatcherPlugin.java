@@ -168,24 +168,12 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 		addInputs(tasks.getByName(DEOBF_BINARY_TASK), mixinDirs);
 		tasks.getByName(REMAP_SOURCE_TASK).getInputs().files(mixinDirs);
-		doBeforeWriteCacheAction(tasks.getByName(DEOBF_BINARY_TASK), new Action<Task>() {
-			@SneakyThrows
-			@Override
-			public void execute(Task task) {
-				File f = task.getOutputs().getFiles().iterator().next();
-
-				BinaryProcessor.process(ModPatcherPlugin.this, f);
-			}
-		});
-		doBeforeWriteCacheAction(tasks.getByName(REMAP_SOURCE_TASK), new Action<Task>() {
-			@SneakyThrows
-			@Override
-			public void execute(Task task) {
-				File f = task.getOutputs().getFiles().iterator().next();
-
-				SourceProcessor.process(ModPatcherPlugin.this, f);
-			}
-		});
+		doBeforeWriteCacheAction(tasks.getByName(DEOBF_BINARY_TASK),
+			task -> BinaryProcessor.process(ModPatcherPlugin.this, task.getOutputs().getFiles().iterator().next())
+		);
+		doBeforeWriteCacheAction(tasks.getByName(REMAP_SOURCE_TASK),
+			task -> SourceProcessor.process(ModPatcherPlugin.this, task.getOutputs().getFiles().iterator().next())
+		);
 	}
 
 	private void addInputs(Task t, Object[] mixinDirs) {

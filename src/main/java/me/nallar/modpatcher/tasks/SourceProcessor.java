@@ -1,6 +1,7 @@
 package me.nallar.modpatcher.tasks;
 
 import com.google.common.io.ByteStreams;
+import lombok.SneakyThrows;
 import me.nallar.ModPatcherPlugin;
 
 import java.io.*;
@@ -9,7 +10,7 @@ import java.nio.file.attribute.*;
 import java.util.jar.*;
 
 public class SourceProcessor {
-	public static void process(ModPatcherPlugin plugin, File file) throws Exception {
+	public static void process(ModPatcherPlugin plugin, File file) {
 		if (!file.exists()) {
 			ModPatcherPlugin.logger.warn("Could not find minecraft source to process. Expected to find it at " + file);
 			return;
@@ -22,7 +23,8 @@ public class SourceProcessor {
 	}
 
 	@SuppressWarnings("ResultOfMethodCallIgnored")
-	private static void extractGeneratedSources(File jar) throws Exception {
+	@SneakyThrows
+	private static void extractGeneratedSources(File jar) {
 		File generatedDirectory = new File("./generated/");
 		generatedDirectory = generatedDirectory.getCanonicalFile();
 		final File generatedSrcDirectory = new File(generatedDirectory, "src");

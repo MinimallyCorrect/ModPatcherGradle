@@ -1,6 +1,7 @@
 package me.nallar.modpatcher.tasks;
 
 import com.google.common.io.ByteStreams;
+import lombok.SneakyThrows;
 import me.nallar.ModPatcherPlugin;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -14,7 +15,7 @@ import java.util.jar.*;
 public class BinaryProcessor {
 	private static final HashMap<String, String> classExtends = new HashMap<>();
 
-	public static void process(ModPatcherPlugin plugin, File file) throws Exception {
+	public static void process(ModPatcherPlugin plugin, File file) {
 		if (!file.exists()) {
 			ModPatcherPlugin.logger.warn("Could not find minecraft code to process. Expected to find it at " + file);
 			return;
@@ -52,7 +53,8 @@ public class BinaryProcessor {
 		}
 	}
 
-	private static void generateMappings(File jar) throws Exception {
+	@SneakyThrows
+	private static void generateMappings(File jar) {
 		JarInputStream istream = new JarInputStream(new FileInputStream(jar));
 		JarEntry entry;
 		while ((entry = istream.getNextJarEntry()) != null) {
