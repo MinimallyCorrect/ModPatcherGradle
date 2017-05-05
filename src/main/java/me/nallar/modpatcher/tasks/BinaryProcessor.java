@@ -97,7 +97,9 @@ public class BinaryProcessor {
 			JarEntry entry;
 			while ((entry = istream.getNextJarEntry()) != null) {
 				byte[] classBytes = ByteStreams.toByteArray(istream);
-				if (entry.getName().endsWith(".class") && entry.getName().startsWith("net/minecraft")) {
+				if (entry.getName().endsWith(".class")
+					&& entry.getName().startsWith("net/minecraft")
+					&& !entry.getName().startsWith("net/minecraft/client")) {
 					val reader = new ClassReader(classBytes);
 					val node = new ClassNode();
 					reader.accept(node, ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
