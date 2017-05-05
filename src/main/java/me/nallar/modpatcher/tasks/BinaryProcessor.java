@@ -14,6 +14,7 @@ import org.omg.CORBA.StringHolder;
 import java.io.*;
 import java.util.*;
 import java.util.jar.*;
+import java.util.zip.*;
 
 public class BinaryProcessor {
 	private static final HashMap<String, String> classExtends = new HashMap<>();
@@ -93,6 +94,7 @@ public class BinaryProcessor {
 	@SneakyThrows
 	private static void generateStubMinecraftClasses(File jar) {
 		try (val os = new JarOutputStream(new FileOutputStream(new File(getGeneratedDirectory(), "minecraft_stubs.jar")))) {
+			os.setLevel(Deflater.BEST_COMPRESSION);
 			JarInputStream istream = new JarInputStream(new FileInputStream(jar));
 			JarEntry entry;
 			while ((entry = istream.getNextJarEntry()) != null) {
