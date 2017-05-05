@@ -194,6 +194,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		public boolean noMixinIsError = true;
 		public boolean extractGeneratedSources = false;
 		public boolean generateInheritanceHierarchy = false;
+		public boolean generateStubMinecraftClasses = false;
 
 		public String getMixinPackageToUse() {
 			return Objects.equals(mixinPackage, "all") ? null : mixinPackage;

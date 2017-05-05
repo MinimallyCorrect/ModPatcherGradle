@@ -2,10 +2,13 @@ package me.nallar.modpatcher.tasks;
 
 import com.google.common.io.ByteStreams;
 import lombok.SneakyThrows;
+import lombok.val;
 import me.nallar.ModPatcherPlugin;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
 import org.omg.CORBA.StringHolder;
 
 import java.io.*;
@@ -15,16 +18,19 @@ import java.util.jar.*;
 public class BinaryProcessor {
 	private static final HashMap<String, String> classExtends = new HashMap<>();
 
-	public static void process(ModPatcherPlugin plugin, File file) {
-		if (!file.exists()) {
-			ModPatcherPlugin.logger.warn("Could not find minecraft code to process. Expected to find it at " + file);
+	public static void process(ModPatcherPlugin plugin, File deobfJar) {
+		if (!deobfJar.exists()) {
+			ModPatcherPlugin.logger.warn("Could not find minecraft code to process. Expected to find it at " + deobfJar);
 			return;
 		}
 
-		plugin.mixinTransform(file.toPath());
+		plugin.mixinTransform(deobfJar.toPath());
 
 		if (plugin.extension.generateInheritanceHierarchy)
-			generateMappings(file);
+			generateMappings(deobfJar);
+
+		if (plugin.extension.generateStubMinecraftClasses)
+			generateStubMinecraftClasses(deobfJar);
 	}
 
 	private static void addClassToExtendsMap(byte[] inputCode) {
@@ -54,6 +60,18 @@ public class BinaryProcessor {
 	}
 
 	@SneakyThrows
+	private static File getGeneratedDirectory() {
+		File generatedDirectory = new File("./generated/");
+		generatedDirectory = generatedDirectory.getCanonicalFile();
+
+		if (!generatedDirectory.exists()) {
+			//noinspection ResultOfMethodCallIgnored
+			generatedDirectory.mkdir();
+		}
+		return generatedDirectory;
+	}
+
+	@SneakyThrows
 	private static void generateMappings(File jar) {
 		JarInputStream istream = new JarInputStream(new FileInputStream(jar));
 		JarEntry entry;
@@ -67,16 +85,33 @@ public class BinaryProcessor {
 		}
 		istream.close();
 
-		File generatedDirectory = new File("./generated/");
-		generatedDirectory = generatedDirectory.getCanonicalFile();
-
-		if (!generatedDirectory.exists()) {
-			//noinspection ResultOfMethodCallIgnored
-			generatedDirectory.mkdir();
-		}
-		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(new File(generatedDirectory, "extendsMap.obj")))) {
+		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(new File(getGeneratedDirectory(), "extendsMap.obj")))) {
 			objectOutputStream.writeObject(classExtends);
 		}
+	}
 
+	@SneakyThrows
+	private static void generateStubMinecraftClasses(File jar) {
+		try (val os = new JarOutputStream(new FileOutputStream(new File(getGeneratedDirectory(), "minecraft_stubs.jar")))) {
+			JarInputStream istream = new JarInputStream(new FileInputStream(jar));
+			JarEntry entry;
+			while ((entry = istream.getNextJarEntry()) != null) {
+				byte[] classBytes = ByteStreams.toByteArray(istream);
+				if (entry.getName().endsWith(".class")) {
+					val reader = new ClassReader(classBytes);
+					val node = new ClassNode();
+					reader.accept(node, ClassReader.SKIP_CODE | ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
+					val writer = new ClassWriter(0);
+					node.accept(writer);
+					val stub = writer.toByteArray();
+					val jarEntry = new JarEntry(entry.getName());
+					os.putNextEntry(jarEntry);
+					os.write(stub);
+					os.closeEntry();
+				}
+				istream.closeEntry();
+			}
+			istream.close();
+		}
 	}
 }
