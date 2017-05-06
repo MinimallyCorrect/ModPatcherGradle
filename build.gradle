@@ -27,6 +27,7 @@ dependencies {
 	provided "org.projectlombok:lombok:1.16.6"
 	provided "net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT"
 	compile group: 'me.nallar', name: "Mixin", version: "1.0-SNAPSHOT", changing: true
+	compile files('libs/lzma-0.0.1.jar')
 }
 
 // Source compiler configuration

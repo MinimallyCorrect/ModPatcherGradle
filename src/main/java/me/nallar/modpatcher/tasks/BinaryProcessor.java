@@ -3,6 +3,8 @@ package me.nallar.modpatcher.tasks;
 import com.google.common.io.ByteStreams;
 import lombok.SneakyThrows;
 import lombok.val;
+import lzma.sdk.lzma.Encoder;
+import lzma.streams.LzmaOutputStream;
 import me.nallar.ModPatcherPlugin;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -72,6 +74,15 @@ public class BinaryProcessor {
 		return generatedDirectory;
 	}
 
+	private static Encoder getEncoder() {
+		val encoder = new Encoder();
+		encoder.setDictionarySize(1 << 23);
+		encoder.setEndMarkerMode(true);
+		encoder.setMatchFinder(Encoder.EMatchFinderTypeBT4);
+		encoder.setNumFastBytes(0x20);
+		return encoder;
+	}
+
 	@SneakyThrows
 	private static void generateMappings(File jar) {
 		JarInputStream istream = new JarInputStream(new FileInputStream(jar));
@@ -85,15 +96,14 @@ public class BinaryProcessor {
 			istream.closeEntry();
 		}
 		istream.close();
-
-		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(new File(getGeneratedDirectory(), "extendsMap.obj")))) {
+		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new LzmaOutputStream(new FileOutputStream(new File(getGeneratedDirectory(), "extendsMap.obj.lzma")), getEncoder()))) {
 			objectOutputStream.writeObject(classExtends);
 		}
 	}
 
 	@SneakyThrows
 	private static void generateStubMinecraftClasses(File jar) {
-		try (val os = new JarOutputStream(new FileOutputStream(new File(getGeneratedDirectory(), "minecraft_stubs.jar")))) {
+		try (val os = new JarOutputStream(new LzmaOutputStream(new FileOutputStream(new File(getGeneratedDirectory(), "minecraft_stubs.jar.lzma")), getEncoder()))) {
 			os.setLevel(Deflater.BEST_COMPRESSION);
 			JarInputStream istream = new JarInputStream(new FileInputStream(jar));
 			JarEntry entry;
