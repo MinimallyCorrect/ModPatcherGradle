@@ -96,8 +96,10 @@ public class BinaryProcessor {
 			istream.closeEntry();
 		}
 		istream.close();
-		try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new LzmaOutputStream(new FileOutputStream(new File(getGeneratedDirectory(), "extendsMap.obj.lzma")), getEncoder()))) {
-			objectOutputStream.writeObject(classExtends);
+		try (val os = new PrintStream(new LzmaOutputStream(new BufferedOutputStream(new FileOutputStream(new File(getGeneratedDirectory(), "extendsMap.obj.lzma"))), getEncoder()))) {
+			for (val cl : classExtends.entrySet()) {
+				os.println(cl.getKey() + "^" + cl.getValue());
+			}
 		}
 	}
 
