@@ -104,7 +104,7 @@ public class BinaryProcessor {
 	@SneakyThrows
 	private static void generateStubMinecraftClasses(File jar) {
 		try (val os = new JarOutputStream(new LzmaOutputStream(new FileOutputStream(new File(getGeneratedDirectory(), "minecraft_stubs.jar.lzma")), getEncoder()))) {
-			os.setLevel(Deflater.BEST_COMPRESSION);
+			os.setLevel(Deflater.NO_COMPRESSION);
 			JarInputStream istream = new JarInputStream(new FileInputStream(jar));
 			JarEntry entry;
 			while ((entry = istream.getNextJarEntry()) != null) {
