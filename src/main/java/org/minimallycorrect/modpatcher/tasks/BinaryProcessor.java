@@ -1,11 +1,11 @@
-package me.nallar.modpatcher.tasks;
+package org.minimallycorrect.modpatcher.tasks;
 
 import com.google.common.io.ByteStreams;
 import lombok.SneakyThrows;
 import lombok.val;
 import lzma.sdk.lzma.Encoder;
 import lzma.streams.LzmaOutputStream;
-import me.nallar.ModPatcherPlugin;
+import org.minimallycorrect.modpatcher.ModPatcherPlugin;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;

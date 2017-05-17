@@ -1,8 +1,8 @@
-package me.nallar.modpatcher.tasks;
+package org.minimallycorrect.modpatcher.tasks;
 
 import com.google.common.io.ByteStreams;
 import lombok.SneakyThrows;
-import me.nallar.ModPatcherPlugin;
+import org.minimallycorrect.modpatcher.ModPatcherPlugin;
 
 import java.io.*;
 import java.nio.file.*;

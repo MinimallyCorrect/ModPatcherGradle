@@ -1,13 +1,9 @@
-package me.nallar;
+package org.minimallycorrect.modpatcher;
 
 import lombok.Data;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.val;
-import me.nallar.javatransformer.api.JavaTransformer;
-import me.nallar.mixin.internal.MixinApplicator;
-import me.nallar.modpatcher.tasks.BinaryProcessor;
-import me.nallar.modpatcher.tasks.SourceProcessor;
 import net.minecraftforge.gradle.user.UserBaseExtension;
 import net.minecraftforge.gradle.user.UserBasePlugin;
 import net.minecraftforge.gradle.util.caching.CachedTask;
@@ -18,6 +14,10 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskInputs;
+import org.minimallycorrect.javatransformer.api.JavaTransformer;
+import org.minimallycorrect.mixin.internal.MixinApplicator;
+import org.minimallycorrect.modpatcher.tasks.BinaryProcessor;
+import org.minimallycorrect.modpatcher.tasks.SourceProcessor;
 
 import java.io.*;
 import java.nio.file.*;

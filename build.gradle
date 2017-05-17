@@ -2,18 +2,17 @@ plugins {
 	id "com.gradle.plugin-publish" version "0.9.2"
 	id 'nebula.provided-base' version '3.0.3'
 	id "me.tatarka.retrolambda" version "3.2.4"
-	id 'groovy'
 	id 'maven'
 }
 
 defaultTasks 'build'
 
-group="me.nallar"
+group="org.minimallycorrect.modpatcher"
 version = "${buildVersion}-SNAPSHOT"
 
 repositories {
 	jcenter()
-	maven { url = 'http://repo.nallar.me/' }
+	maven { url = 'https://repo.nallar.me/' }
 	maven {
 		name = "forge"
 		url = "http://files.minecraftforge.net/maven"
@@ -24,9 +23,9 @@ configurations.all { resolutionStrategy.cacheChangingModulesFor 30, 'seconds' }
 
 dependencies {
 	provided gradleApi()
-	provided "org.projectlombok:lombok:1.16.6"
-	provided "net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT"
-	compile group: 'me.nallar', name: "Mixin", version: "1.0-SNAPSHOT", changing: true
+	compileOnly "org.projectlombok:lombok:1.16.16"
+	compileOnly "net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT"
+	compile group: 'org.minimallycorrect.mixin', name: "Mixin", version: "1.0-SNAPSHOT", changing: true
 	compile files('libs/lzma-0.0.1.jar')
 }
 
@@ -62,13 +61,17 @@ artifacts {
 
 pluginBundle {
 	website = 'http://www.gradle.org/'
-	vcsUrl = 'https://github.com/nallar/ModPatcherGradle'
+	vcsUrl = 'https://github.com/MinimallyCorrect/ModPatcherGradle'
 	description = 'Gradle plugin for ModPatcher Core Mods'
 	tags = ['minecraft']
 	plugins << {
 		modpatcher {
-			id = 'me.nallar.ModPatcherGradle'
+			id = 'org.minimallycorrect.modpatcher.ModPatcherGradle'
 			displayName = 'ModPatcher Gradle Plugin'
 		}
 	}
+}
+
+wrapper {
+	gradleVersion = "3.5"
 }
