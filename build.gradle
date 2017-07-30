@@ -71,7 +71,3 @@ pluginBundle {
 		}
 	}
 }
-
-wrapper {
-	gradleVersion = "3.5"
-}
