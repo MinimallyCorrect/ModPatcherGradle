@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.val;
-import net.minecraftforge.gradle.user.UserBaseExtension;
 import net.minecraftforge.gradle.user.UserBasePlugin;
 import net.minecraftforge.gradle.util.caching.CachedTask;
 import org.apache.log4j.Logger;
@@ -15,6 +14,7 @@ import org.gradle.api.Task;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskInputs;
 import org.minimallycorrect.javatransformer.api.JavaTransformer;
+import org.minimallycorrect.mixin.internal.ApplicationType;
 import org.minimallycorrect.mixin.internal.MixinApplicator;
 import org.minimallycorrect.modpatcher.tasks.BinaryProcessor;
 import org.minimallycorrect.modpatcher.tasks.SourceProcessor;
@@ -67,7 +67,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 	@SuppressWarnings("unchecked")
 	private static Action<? super Task> innerAction(Action<? super Task> action) {
-		val actionClass = action.getClass();
+		Class<?> actionClass = action.getClass();
 		if (actionClass.getName().equals(CLASS_GRADLE_TASKACTIONWRAPPER)) {
 			try {
 				val innerField = actionClass.getDeclaredField("action");
@@ -89,13 +89,13 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		project.getPlugins().apply(PLUGIN_FORGE_GRADLE_ID);
 
 		// Ensure ForgeGradle useLocalCache -> true
-		val forgeGradle = ((UserBasePlugin) project.getPlugins().getPlugin(PLUGIN_FORGE_GRADLE_ID));
+		val forgeGradle = ((UserBasePlugin<?>) project.getPlugins().getPlugin(PLUGIN_FORGE_GRADLE_ID));
 
 		val blank_at = new File(project.getBuildDir(), "blank_at.cfg");
 		if (!blank_at.exists() && (blank_at.getParentFile().isDirectory() || blank_at.getParentFile().mkdir()))
 			Files.write(blank_at.toPath(), new byte[0]);
 
-		((UserBaseExtension) forgeGradle.getExtension()).at(blank_at);
+		forgeGradle.getExtension().at(blank_at);
 
 		project.getExtensions().add("modpatcher", extension);
 
@@ -104,6 +104,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 	public JavaTransformer makeMixinTransformer() {
 		val applicator = new MixinApplicator();
+		applicator.setApplicationType(ApplicationType.PRE_PATCH);
 		applicator.setNoMixinIsError(extension.noMixinIsError);
 		for (File file : sourceDirsWithMixins(true)) {
 			applicator.addSource(file.toPath(), extension.getMixinPackageToUse());
@@ -184,7 +185,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		addVersion(inputs, "JavaTransformer", JavaTransformer.class);
 	}
 
-	private void addVersion(TaskInputs inputs, String name, Class c) {
+	private void addVersion(TaskInputs inputs, String name, Class<?> c) {
 		inputs.property(name + "Version", c.getPackage().getImplementationVersion());
 	}
 
