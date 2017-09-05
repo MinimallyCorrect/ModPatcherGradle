@@ -8,6 +8,8 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.specs.Specs;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskInputs;
@@ -116,8 +118,20 @@ public class ModPatcherPlugin implements Plugin<Project> {
 			}
 			if (configurationName == null || configurationName.isEmpty())
 				configurationName = "compile";
-			project.getConfigurations().getByName(configurationName).getResolvedConfiguration().getLenientConfiguration().getFiles(Specs.satisfyAll())
-				.forEach(it -> applicator.addSearchPath(it.toPath()));
+			Configuration configuration = project.getConfigurations().getByName(configurationName);
+			val files = sourceSet.getCompileClasspath();
+			if (files instanceof Configuration)
+				configuration = (Configuration) files;
+			ResolvedConfiguration resolvedConfiguration = configuration.getResolvedConfiguration();
+			if (files instanceof ResolvedConfiguration)
+				resolvedConfiguration = (ResolvedConfiguration) files;
+			if (extension.log)
+				System.out.println("Adding paths from configuration " + resolvedConfiguration);
+			resolvedConfiguration.getLenientConfiguration().getFiles(Specs.satisfyAll()).forEach(it -> {
+				if (extension.log)
+					System.out.println("Added search path " + it.toPath());
+				applicator.addSearchPath(it.toPath());
+			});
 			applicator.addSource(mixinDir.toPath(), extension.getMixinPackageToUse());
 		}
 		return applicator.getMixinTransformer();
@@ -209,6 +223,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		public boolean extractGeneratedSources = false;
 		public boolean generateInheritanceHierarchy = false;
 		public boolean generateStubMinecraftClasses = false;
+		public boolean log = true;
 
 		public String getMixinPackageToUse() {
 			return Objects.equals(mixinPackage, "all") ? null : mixinPackage;
