@@ -126,12 +126,8 @@ public class ModPatcherPlugin implements Plugin<Project> {
 			if (files instanceof ResolvedConfiguration)
 				resolvedConfiguration = (ResolvedConfiguration) files;
 			if (extension.log)
-				System.out.println("Adding paths from configuration " + resolvedConfiguration);
-			resolvedConfiguration.getLenientConfiguration().getFiles(Specs.satisfyAll()).forEach(it -> {
-				if (extension.log)
-					System.out.println("Added search path " + it.toPath());
-				applicator.addSearchPath(it.toPath());
-			});
+				project.getLogger().info("Adding paths from configuration " + resolvedConfiguration + " to MixinApplicator ClassPath");
+			resolvedConfiguration.getLenientConfiguration().getFiles(Specs.satisfyAll()).forEach(it -> applicator.getClassPath().addPath(it.toPath()));
 			applicator.addSource(mixinDir.toPath(), extension.getMixinPackageToUse());
 		}
 		return applicator.getMixinTransformer();
