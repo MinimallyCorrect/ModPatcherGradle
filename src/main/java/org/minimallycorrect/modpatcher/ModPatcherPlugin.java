@@ -71,6 +71,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		Class<?> actionClass = action.getClass();
 		if (actionClass.getName().equals(CLASS_GRADLE_TASKACTIONWRAPPER)) {
 			try {
+				@SuppressWarnings("JavaReflectionMemberAccess")
 				val innerField = actionClass.getDeclaredField("action");
 				innerField.setAccessible(true);
 				val inner = (Action<? super Task>) innerField.get(action);
