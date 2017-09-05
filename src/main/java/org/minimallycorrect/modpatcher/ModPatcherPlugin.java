@@ -19,6 +19,7 @@ import org.minimallycorrect.modpatcher.tasks.SourceProcessor;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.stream.*;
 
 public class ModPatcherPlugin implements Plugin<Project> {
 	public static final String DEOBF_BINARY_TASK = "deobfMcMCP";
@@ -167,7 +168,7 @@ public class ModPatcherPlugin implements Plugin<Project> {
 	public void afterEvaluate(Project project) {
 		val tasks = project.getTasks();
 
-		val mixinDirs = sourceDirsWithMixins(true).toArray();
+		val mixinDirs = sourceDirsWithMixins(false).stream().map(it -> it.mixinDir).collect(Collectors.toList()).toArray();
 
 		addInputs(tasks.getByName(DEOBF_BINARY_TASK), mixinDirs);
 		tasks.getByName(REMAP_SOURCE_TASK).getInputs().files(mixinDirs);
