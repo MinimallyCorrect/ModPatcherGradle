@@ -1,9 +1,6 @@
 package org.minimallycorrect.modpatcher;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.SneakyThrows;
-import lombok.val;
+import lombok.*;
 import net.minecraftforge.gradle.user.UserBasePlugin;
 import net.minecraftforge.gradle.util.caching.CachedTask;
 import org.apache.log4j.Logger;
@@ -106,8 +103,11 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		val applicator = new MixinApplicator();
 		applicator.setApplicationType(ApplicationType.PRE_PATCH);
 		applicator.setNoMixinIsError(extension.noMixinIsError);
-		for (File file : sourceDirsWithMixins(true)) {
-			applicator.addSource(file.toPath(), extension.getMixinPackageToUse());
+		for (SourceSetAndMixinDir entry : sourceDirsWithMixins(true)) {
+			val sourceSet = entry.sourceSet;
+			val mixinDir = entry.mixinDir;
+			sourceSet.getCompileClasspath().forEach(it -> applicator.addSearchPath(it.toPath()));
+			applicator.addSource(mixinDir.toPath(), extension.getMixinPackageToUse());
 		}
 		return applicator.getMixinTransformer();
 	}
@@ -135,20 +135,16 @@ public class ModPatcherPlugin implements Plugin<Project> {
 
 	@SuppressWarnings("unchecked")
 	@SneakyThrows
-	private List<File> sourceDirsWithMixins(boolean root) {
-		val results = new ArrayList<File>();
+	private List<SourceSetAndMixinDir> sourceDirsWithMixins(boolean root) {
+		val results = new ArrayList<SourceSetAndMixinDir>();
 
 		val mixinPackage = extension.getMixinPackageToUse().replace('.', '/');
 
 		for (SourceSet s : (Iterable<SourceSet>) project.getProperties().get("sourceSets")) {
 			for (File javaDir : s.getJava().getSrcDirs()) {
 				File mixinDir = fileWithChild(javaDir, mixinPackage);
-				if (mixinDir.isDirectory()) {
-					if (root)
-						results.add(javaDir);
-					else
-						results.add(mixinDir);
-				}
+				if (mixinDir.isDirectory())
+					results.add(new SourceSetAndMixinDir(s, root ? javaDir : mixinDir));
 			}
 		}
 
@@ -156,6 +152,12 @@ public class ModPatcherPlugin implements Plugin<Project> {
 			throw new FileNotFoundException("Couldn't find any mixin packages! Searched for: " + mixinPackage);
 
 		return results;
+	}
+
+	@RequiredArgsConstructor
+	private static class SourceSetAndMixinDir {
+		final SourceSet sourceSet;
+		final File mixinDir;
 	}
 
 	private File fileWithChild(File javaDir, String mixinPackageToUse) {
