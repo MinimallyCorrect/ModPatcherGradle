@@ -8,6 +8,7 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.specs.Specs;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskInputs;
 import org.minimallycorrect.javatransformer.api.JavaTransformer;
@@ -107,7 +108,16 @@ public class ModPatcherPlugin implements Plugin<Project> {
 		for (SourceSetAndMixinDir entry : sourceDirsWithMixins(true)) {
 			val sourceSet = entry.sourceSet;
 			val mixinDir = entry.mixinDir;
-			sourceSet.getCompileClasspath().forEach(it -> applicator.addSearchPath(it.toPath()));
+
+			String configurationName = null;
+			try {
+				configurationName = sourceSet.getCompileClasspathConfigurationName();
+			} catch (AbstractMethodError | NoSuchMethodError ignored) {
+			}
+			if (configurationName == null || configurationName.isEmpty())
+				configurationName = "compile";
+			project.getConfigurations().getByName(configurationName).getResolvedConfiguration().getLenientConfiguration().getFiles(Specs.satisfyAll())
+				.forEach(it -> applicator.addSearchPath(it.toPath()));
 			applicator.addSource(mixinDir.toPath(), extension.getMixinPackageToUse());
 		}
 		return applicator.getMixinTransformer();
